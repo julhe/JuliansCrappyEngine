@@ -81,6 +81,8 @@
     <ClInclude Include="entt\process\scheduler.hpp" />
     <ClInclude Include="entt\process\process.hpp" />
     <ClInclude Include="YAP.h" />
+    <ClInclude Include="DDSTextureLoader\DDSTextureLoader.h" />
+    <ClInclude Include="DDSTextureLoader\DDSTextureLoader12.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -110,6 +112,8 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="ModelClass.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="DDSTextureLoader\DDSTextureLoader.cpp" />
+    <ClCompile Include="DDSTextureLoader\DDSTextureLoader12.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

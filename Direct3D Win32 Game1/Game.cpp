@@ -93,7 +93,7 @@ shared_ptr<Shader> m_Shader;
 unique_ptr<Renderer> renderer;
 unique_ptr<std::string> consoleString;
 void Log(std::string string) {
-	consoleString->append(string);
+	consoleString->append(string + "\n");
 }
 
 shared_ptr<Texture2D> GetTextureOrDefault(
@@ -116,12 +116,25 @@ shared_ptr<Texture2D> GetTextureOrDefault(
 	auto end_time = system_clock::now();
 	auto diff = end_time - start_time;
 	auto durration = cr::duration_cast<cr::milliseconds>(diff);
-	Log("loaded-tex: " + path + " in " + std::to_string(durration.count()) + "ms \n");
+	Log("loaded-tex: " + path + " in " + std::to_string(durration.count()) + "ms");
 	return tex;
 }
 
 entt::registry registry;
 static bool profilerOpened(true);
+
+bool replace(std::string& str, const std::string& from, const std::string& to) {
+	size_t start_pos = str.find(from);
+	if (start_pos == std::string::npos)
+		return false;
+	str.replace(start_pos, from.length(), to);
+	return true;
+}
+std::string replacePngByDDS(const std::string s) {
+	std::string newS = s;
+	replace(newS, "PNG", "dds");
+	return newS;
+}
 
 // Initialize the Direct3D resources required to run.
 void Game::Initialize(HWND window, int width, int height)
@@ -149,10 +162,10 @@ void Game::Initialize(HWND window, int width, int height)
 		m_Camera = make_unique<CameraClass>();// new CameraClass();
 		m_Camera->Position = XMFLOAT3(-1000.0f, 100.0f, 8.0f);
 		m_Camera->Rotation = XMFLOAT3(90.0f, 00.0f, 0.0f);
-		textures->push_back(make_shared<Texture2D>(L_ROOT_ASSET_PATH + L"gi_flag.png", m_d3dDevice.Get(), m_d3dContext.Get()));
-		textures->push_back(make_shared<Texture2D>(L_ROOT_ASSET_PATH + L"black.png", m_d3dDevice.Get(), m_d3dContext.Get()));
-		textures->push_back(make_shared<Texture2D>(L_ROOT_ASSET_PATH + L"white.png", m_d3dDevice.Get(), m_d3dContext.Get()));
-		textures->push_back(make_shared<Texture2D>(L_ROOT_ASSET_PATH + L"normal.png", m_d3dDevice.Get(), m_d3dContext.Get(), true));
+		textures->push_back(make_shared<Texture2D>(L_ROOT_ASSET_PATH + L"gi_flag.DDS", m_d3dDevice.Get(), m_d3dContext.Get()));
+		textures->push_back(make_shared<Texture2D>(L_ROOT_ASSET_PATH + L"black.DDS", m_d3dDevice.Get(), m_d3dContext.Get()));
+		textures->push_back(make_shared<Texture2D>(L_ROOT_ASSET_PATH + L"white.DDS", m_d3dDevice.Get(), m_d3dContext.Get()));
+		textures->push_back(make_shared<Texture2D>(L_ROOT_ASSET_PATH + L"normal.DDS", m_d3dDevice.Get(), m_d3dContext.Get(), true));
 		m_Models = make_unique<vector<shared_ptr<ModelClass>>>();
 		HRESULT result;
 		//m_Models->push_back(std::move(triangle));
@@ -174,7 +187,13 @@ void Game::Initialize(HWND window, int width, int height)
 		consoleString = make_unique<std::string>("Welcome!\n");
 	}
 	objl::Loader Loader;
+	auto start_time = system_clock::now();
 	bool loadout = Loader.LoadFile(ROOT_ASSET_PATH + "sponza.obj");
+	auto end_time = system_clock::now();
+	auto diff = end_time - start_time;
+	auto durration = cr::duration_cast<cr::milliseconds>(diff);
+	Log("loaded mainMesh in " + std::to_string(durration.count()) + " ms");
+
 	for (int i = 0; i < Loader.LoadedMeshes.size(); i++)
 	{
 		objl::MeshRenderer curMesh = Loader.LoadedMeshes[i];
@@ -215,28 +234,29 @@ void Game::Initialize(HWND window, int width, int height)
 		m_Models->push_back(subMesh);
 
 
+
 		shared_ptr<Material> mat = FindMaterial(curMesh.MeshMaterial.name);
 		if (mat == nullptr) {
 			shared_ptr<Texture2D> albedo = GetTextureOrDefault(
-				ROOT_ASSET_PATH + curMesh.MeshMaterial.map_Kd,
+				ROOT_ASSET_PATH + replacePngByDDS(curMesh.MeshMaterial.map_Kd),
 				textures->at(0),
 				m_d3dDevice.Get(), 
 				m_d3dContext.Get());
 
 			shared_ptr<Texture2D> roughness = GetTextureOrDefault(
-				ROOT_ASSET_PATH + curMesh.MeshMaterial.map_Ns,
+				ROOT_ASSET_PATH + replacePngByDDS(curMesh.MeshMaterial.map_Ns),
 				textures->at(2),
 				m_d3dDevice.Get(),
 				m_d3dContext.Get(), true);
 
 			shared_ptr<Texture2D> metalness = GetTextureOrDefault(
-				ROOT_ASSET_PATH + curMesh.MeshMaterial.map_Ka,
+				ROOT_ASSET_PATH + replacePngByDDS(curMesh.MeshMaterial.map_Ka),
 				textures->at(1),
 				m_d3dDevice.Get(),
 				m_d3dContext.Get(), true);
 
 			shared_ptr<Texture2D> normalMap = GetTextureOrDefault(
-				ROOT_ASSET_PATH + curMesh.MeshMaterial.map_bump,
+				ROOT_ASSET_PATH + replacePngByDDS(curMesh.MeshMaterial.map_bump),
 				textures->at(3),
 				m_d3dDevice.Get(),
 				m_d3dContext.Get(), true);
@@ -444,11 +464,11 @@ void Game::CreateDevice()
         // TODO: Modify for supported Direct3D feature levels
         D3D_FEATURE_LEVEL_11_1,
         D3D_FEATURE_LEVEL_11_0,
-        D3D_FEATURE_LEVEL_10_1,
-        D3D_FEATURE_LEVEL_10_0,
-        D3D_FEATURE_LEVEL_9_3,
-        D3D_FEATURE_LEVEL_9_2,
-        D3D_FEATURE_LEVEL_9_1,
+        //D3D_FEATURE_LEVEL_10_1,
+        //D3D_FEATURE_LEVEL_10_0,
+        //D3D_FEATURE_LEVEL_9_3,
+        //D3D_FEATURE_LEVEL_9_2,
+        //D3D_FEATURE_LEVEL_9_1,
     };
 
     // Create the DX11 API device object, and get a corresponding context.

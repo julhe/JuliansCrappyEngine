@@ -179,6 +179,14 @@ float3 ToneMap_Hejl2015(in float3 hdr)
     return vf.xyz / vf.www;
 }
 
+float3 UnpackNormalMap(float2 normalMap)
+{
+    normalMap = normalMap * 2.0 - 1.0;
+    return float3(
+        normalMap,
+        sqrt(1.0 - saturate(dot(normalMap, normalMap))) );
+}
+
 #define REINHARDT 1
 float3 Tonemap(float3 color)
 {
