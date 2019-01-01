@@ -22,7 +22,7 @@ float4 ColorPixelShader(PixelInputType i) : SV_TARGET
     float3x3 tangentToWorld = cotangent_frame(normalize(i.normalWS), -viewDir, i.uv);
     float3 normalMap = normalTexture.Sample(diffuseTextureSampler, i.uv);
     normalMap = normalMap * 2.0 - 1.0;
-    mat.normalWS = normalize(i.normalWS);//  normalize(mul(transpose(tangentToWorld), normalMap));
+    mat.normalWS =   normalize(mul(transpose(tangentToWorld), normalMap));
 
     mat.roughness = roughnessTexture.Sample(diffuseTextureSampler, i.uv);
 

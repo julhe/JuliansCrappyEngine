@@ -4,6 +4,9 @@
     <Filter Include="imgui">
       <UniqueIdentifier>{fe805381-a6f4-42bd-b6b5-cf7eda2136a1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="EnTT">
+      <UniqueIdentifier>{46cc109b-e44d-4698-87e2-f2105c3fc35e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -37,7 +40,6 @@
     <ClInclude Include="DXUtility.h" />
     <ClInclude Include="Texture2D.h" />
     <ClInclude Include="WICTextureLoader\WICTextureLoader.h" />
-    <ClInclude Include="ECS.h" />
     <ClInclude Include="ECS_Types.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Utility.h" />
@@ -45,6 +47,40 @@
     <ClInclude Include="ModelClass.h" />
     <ClInclude Include="OBJ-Loader\Source\OBJ_Loader.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="entt\entt.hpp">
+      <Filter>EnTT</Filter>
+    </ClInclude>
+    <ClInclude Include="entt\signal\delegate.hpp" />
+    <ClInclude Include="entt\signal\dispatcher.hpp" />
+    <ClInclude Include="entt\signal\emitter.hpp" />
+    <ClInclude Include="entt\signal\sigh.hpp" />
+    <ClInclude Include="entt\core\algorithm.hpp" />
+    <ClInclude Include="entt\core\family.hpp" />
+    <ClInclude Include="entt\core\hashed_string.hpp" />
+    <ClInclude Include="entt\core\monostate.hpp" />
+    <ClInclude Include="entt\core\type_traits.hpp" />
+    <ClInclude Include="entt\core\utility.hpp" />
+    <ClInclude Include="entt\core\ident.hpp" />
+    <ClInclude Include="entt\config\version.h" />
+    <ClInclude Include="entt\config\config.h" />
+    <ClInclude Include="entt\entity\actor.hpp" />
+    <ClInclude Include="entt\entity\entity.hpp" />
+    <ClInclude Include="entt\entity\view.hpp" />
+    <ClInclude Include="entt\entity\sparse_set.hpp" />
+    <ClInclude Include="entt\entity\registry.hpp" />
+    <ClInclude Include="entt\entity\snapshot.hpp" />
+    <ClInclude Include="entt\entity\prototype.hpp" />
+    <ClInclude Include="entt\entity\entt_traits.hpp" />
+    <ClInclude Include="entt\entity\helper.hpp" />
+    <ClInclude Include="entt\locator\locator.hpp" />
+    <ClInclude Include="entt\meta\factory.hpp" />
+    <ClInclude Include="entt\meta\meta.hpp" />
+    <ClInclude Include="entt\resource\loader.hpp" />
+    <ClInclude Include="entt\resource\handle.hpp" />
+    <ClInclude Include="entt\resource\cache.hpp" />
+    <ClInclude Include="entt\process\scheduler.hpp" />
+    <ClInclude Include="entt\process\process.hpp" />
+    <ClInclude Include="YAP.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />

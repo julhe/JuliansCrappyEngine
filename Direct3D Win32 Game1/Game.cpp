@@ -1,7 +1,8 @@
 //
 // Game.cpp
 //
-
+#define YAP_IMPL
+#define YAP_IMGUI
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_win32.h"
 #include "imgui/imgui_impl_dx11.h"
@@ -14,12 +15,13 @@
 #include "Renderer.h"
 #include "OBJ-Loader\Source\OBJ_Loader.h"
 #include "Texture2D.h"
-#include "ECS.h"
 #include "ECS_Types.h"
 #include "Material.h"
 #include <locale>
 #include <codecvt>
 #include <chrono>
+
+
 extern void ExitGame();
 
 const std::wstring L_ROOT_ASSET_PATH = L"..//..//Content//";
@@ -118,7 +120,9 @@ shared_ptr<Texture2D> GetTextureOrDefault(
 	return tex;
 }
 
-unique_ptr<ECS::World> world;
+entt::registry registry;
+static bool profilerOpened(true);
+
 // Initialize the Direct3D resources required to run.
 void Game::Initialize(HWND window, int width, int height)
 {
@@ -138,36 +142,37 @@ void Game::Initialize(HWND window, int width, int height)
 	ImGui_ImplDX11_Init(m_d3dDevice.Get(), m_d3dContext.Get());
 
 	ImGui::StyleColorsDark();
+	
+	YAP::Init(256, 1, 1024, 256);
 
-	world = unique_ptr<ECS::World>(ECS::World::createWorld());
-
-	m_Camera = make_unique<CameraClass>();// new CameraClass();
-	m_Camera->Position = XMFLOAT3(-1000.0f, 100.0f, 8.0f);
-	m_Camera->Rotation = XMFLOAT3(90.0f, 00.0f, 0.0f);
-	textures->push_back(make_shared<Texture2D>(L_ROOT_ASSET_PATH + L"gi_flag.png", m_d3dDevice.Get(), m_d3dContext.Get()));
-	textures->push_back(make_shared<Texture2D>(L_ROOT_ASSET_PATH + L"black.png", m_d3dDevice.Get(), m_d3dContext.Get()));
-	textures->push_back(make_shared<Texture2D>(L_ROOT_ASSET_PATH + L"white.png", m_d3dDevice.Get(), m_d3dContext.Get()));
-	textures->push_back(make_shared<Texture2D>(L_ROOT_ASSET_PATH + L"normal.png", m_d3dDevice.Get(), m_d3dContext.Get(), true));
-	m_Models = make_unique<vector<shared_ptr<ModelClass>>>();
-	HRESULT result;
-	//m_Models->push_back(std::move(triangle));
-	//if (!result)
-	//{
-	//	MessageBox(window, L"Could not initialize the model object.", L"Error", MB_OK);
-	//}
-
-	m_Shader = make_unique<Shader>();
-	result = m_Shader->Initalize(m_d3dDevice.Get(), window);
-	if (!result)
 	{
-		MessageBox(window, L"Could not initialize the color shader object.", L"Error", MB_OK);
+		m_Camera = make_unique<CameraClass>();// new CameraClass();
+		m_Camera->Position = XMFLOAT3(-1000.0f, 100.0f, 8.0f);
+		m_Camera->Rotation = XMFLOAT3(90.0f, 00.0f, 0.0f);
+		textures->push_back(make_shared<Texture2D>(L_ROOT_ASSET_PATH + L"gi_flag.png", m_d3dDevice.Get(), m_d3dContext.Get()));
+		textures->push_back(make_shared<Texture2D>(L_ROOT_ASSET_PATH + L"black.png", m_d3dDevice.Get(), m_d3dContext.Get()));
+		textures->push_back(make_shared<Texture2D>(L_ROOT_ASSET_PATH + L"white.png", m_d3dDevice.Get(), m_d3dContext.Get()));
+		textures->push_back(make_shared<Texture2D>(L_ROOT_ASSET_PATH + L"normal.png", m_d3dDevice.Get(), m_d3dContext.Get(), true));
+		m_Models = make_unique<vector<shared_ptr<ModelClass>>>();
+		HRESULT result;
+		//m_Models->push_back(std::move(triangle));
+		//if (!result)
+		//{
+		//	MessageBox(window, L"Could not initialize the model object.", L"Error", MB_OK);
+		//}
+
+		m_Shader = make_unique<Shader>();
+		result = m_Shader->Initalize(m_d3dDevice.Get(), window);
+		if (!result)
+		{
+			MessageBox(window, L"Could not initialize the color shader object.", L"Error", MB_OK);
+		}
+
+		materials = make_unique<vector<shared_ptr<Material>>>();
+		materials->push_back(make_shared<Material>("default", m_Shader, textures->at(0), textures->at(0), textures->at(0), textures->at(0)));
+
+		consoleString = make_unique<std::string>("Welcome!\n");
 	}
-
-	materials = make_unique<vector<shared_ptr<Material>>>();
-	materials->push_back(make_shared<Material>("default", m_Shader, textures->at(0), textures->at(0), textures->at(0), textures->at(0)));
-
-	consoleString = make_unique<std::string>("Welcome!\n");
-
 	objl::Loader Loader;
 	bool loadout = Loader.LoadFile(ROOT_ASSET_PATH + "sponza.obj");
 	for (int i = 0; i < Loader.LoadedMeshes.size(); i++)
@@ -239,11 +244,9 @@ void Game::Initialize(HWND window, int width, int height)
 			materials->push_back(mat);
 		}
 
-
-
-		auto ent = world->create(); //use raw pointer here
-		ent->assign<Types::Transform>();
-		ent->assign<Types::MeshRenderer>(subMesh, mat);
+		auto ent = registry.create(); //use raw pointer here
+		registry.assign<Types::Transform>(ent);
+		registry.assign<Types::MeshRenderer>(ent, subMesh, mat);
 	}
 
     // TODO: Change the timer settings if you want something other than the default variable timestep mode.
@@ -271,10 +274,15 @@ void Game::Update(DX::StepTimer const& timer)
 {
     float elapsedTime = float(timer.GetElapsedSeconds());
 
+
     // TODO: Add your game logic here.
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
+
+	YAP::PushPhase(Update);	
+	YAP::PushSection(Update Main);
+
 	bool bTrue = false;
 	ImGui::ShowDemoWindow(&bTrue);
 	ImGui::Begin("Main");                        
@@ -300,19 +308,15 @@ void Game::Update(DX::StepTimer const& timer)
 	//	ImGui::TextUnformatted(logString.c_str());
 	//ImGui::EndChild();
 	ImGui::EndGroup();
+	YAP::PopSection();
+	YAP::PopPhase();
 	
+	YAP::ImGuiLogger(&profilerOpened);
 	ImGui::End();
 	
     elapsedTime;
 }
-//
-//unique_ptr<ID3D11Buffer> m_perObject;
-//void Game::DrawMesh(ModelClass* model, XMMATRIX transform) {
-//	model->SetActive(m_d3dContext.Get());
-//	m_d3dContext->DrawIndexed(model->GetIndexCount(), 0, 0);
-//	//D3D11_MAPPED_SUBRESOURCE mappedResource;
-//	//DX::ThrowIfFailed(m_d3dContext->Map(m_perObject.get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
-//}
+
 // Draws the scene.
 void Game::SetActive()
 {
@@ -321,19 +325,23 @@ void Game::SetActive()
     {
         return;
     }
-
+	YAP::PushPhase(Rendering);
+	YAP::PushSection(RenderCamera);
     Clear();
 	m_Camera->AspectRatio = m_outputWidth / (float)m_outputHeight;
     
 	// Render World
 	m_Camera->SetActive();
-	renderer->RenderCamera(world.get(), m_Camera.get());
-
+	renderer->RenderCamera(registry, m_Camera.get());
+	YAP::PopSection();
+	YAP::PopPhase();
+	
 	// Render GUI
 	ImGui::SetActive();
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
     Present();
+	YAP::NewFrame();
 }
 
 // Helper method to clear the back buffers.
@@ -356,7 +364,7 @@ void Game::Present()
     // The first argument instructs DXGI to block until VSync, putting the application
     // to sleep until the next VSync. This ensures we don't waste any cycles rendering
     // frames that will never be displayed to the screen.
-    HRESULT hr = m_swapChain->Present(0, 0);
+    HRESULT hr = m_swapChain->Present(1, 0);
 
     // If the device was reset we must completely reinitialize the renderer.
     if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)

@@ -1,10 +1,11 @@
 #include "Renderer.h"
 #include "pch.h"
-#include "ECS.h"
+#include "entt\entt.hpp"
+#include <cstdint>
 #include "ECS_Types.h"
 #include "Camera.h"
 using namespace Types;
-using namespace ECS;
+
 Renderer::Renderer(
 	ID3D11DeviceContext1*  d3dContext) : 
 	m_d3dContext(d3dContext)
@@ -33,23 +34,28 @@ void Renderer::DrawFrame(CameraClass* camera) {
 	drawQueue.clear();
 }
 
-void Renderer::RenderCamera(World* world, CameraClass* camera) {
+void Renderer::RenderCamera(entt::registry<> &registry, CameraClass* camera) {
 	XMMATRIX worldToClip = camera->GetWorldToClip();
-	world->each<Transform, MeshRenderer>([&]
-		(Entity* ent, ComponentHandle<Transform> transform, ComponentHandle<MeshRenderer> meshRenderer) -> void {
-		meshRenderer->mesh->SetActive(m_d3dContext.Get());
-		XMMATRIX objectToWorld = transform->ObjectToWorldMatrix();
+	auto view = registry.view<Transform, MeshRenderer>();
+	for(auto ent: view) {
+		auto &meshRenderer = view.get<MeshRenderer>(ent);
+		auto &transform = view.get<Transform>(ent);
+
+		meshRenderer.mesh->SetActive(m_d3dContext.Get());
+
+		XMMATRIX objectToWorld = transform.ObjectToWorldMatrix();
 		XMMATRIX objectToClip = XMMatrixMultiply(objectToWorld, worldToClip);
 
-		meshRenderer->material->shader->SetActive(m_d3dContext.Get());
-		meshRenderer->material->shader->SetShaderParameters(
+		meshRenderer.material->shader->SetActive(m_d3dContext.Get());
+		meshRenderer.material->shader->SetShaderParameters(
 			m_d3dContext.Get(),
 			camera->Position,
 			worldToClip,
-			meshRenderer->material);
+			meshRenderer.material);
 
-		m_d3dContext->DrawIndexed(meshRenderer->mesh->GetIndexCount(), 0, 0);
-	});
+		m_d3dContext->DrawIndexed(meshRenderer.mesh->GetIndexCount(), 0, 0);
+	};
+
 }
 
 Renderer::~Renderer()

@@ -7,6 +7,7 @@
 #include "StepTimer.h"
 #include "pch.h"
 #include "ModelClass.h"
+#include "YAP.h"
 
 // A basic game implementation that creates a D3D11 device and
 // provides a game loop.

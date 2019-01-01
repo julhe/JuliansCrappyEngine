@@ -3,7 +3,7 @@
 #include "pch.h"
 #include "ModelClass.h"
 #include "Shader.h"
-#include "ECS.h"
+#include "entt\entt.hpp"
 #include "ECS_Types.h"
 #include "Camera.h"
 #include "Texture2D.h"
@@ -29,7 +29,7 @@ public:
 	void DrawFrame(CameraClass*);
 	void AddToFrame(Drawcall);
 
-	void RenderCamera(World* world, CameraClass* camera);
+	void RenderCamera(entt::registry<> &registry, CameraClass* camera);
 
 	~Renderer();
 };
