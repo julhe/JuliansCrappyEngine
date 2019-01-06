@@ -20,6 +20,9 @@
 #include <locale>
 #include <codecvt>
 #include <chrono>
+#include "draco\mesh\mesh.h"
+#include "draco\io\mesh_io.h"
+#include "draco\core\statusor.h"
 
 
 extern void ExitGame();
@@ -182,20 +185,60 @@ void Game::Initialize(HWND window, int width, int height)
 		}
 
 		materials = make_unique<vector<shared_ptr<Material>>>();
-		materials->push_back(make_shared<Material>("default", m_Shader, textures->at(0), textures->at(0), textures->at(0), textures->at(0)));
+		materials->push_back(make_shared<Material>("default", m_Shader, textures->at(0), textures->at(0), textures->at(0), textures->at(3)));
 
 		consoleString = make_unique<std::string>("Welcome!\n");
 	}
-	objl::Loader Loader;
 	auto start_time = system_clock::now();
-	bool loadout = Loader.LoadFile(ROOT_ASSET_PATH + "sponza.obj");
+	draco::StatusOr<unique_ptr<draco::Mesh>> dracoMeshWrap =
+		draco::ReadMeshFromFile(ROOT_ASSET_PATH + "sponza_1.obj.drc");
+
+	unique_ptr<draco::Mesh> mesh = std::move(dracoMeshWrap).value();
+	auto indices = vector<unsigned long>();
+	auto vertices = vector<ModelClass::VertexInputType>();
+	auto positions = mesh->GetNamedAttribute(draco::GeometryAttribute::POSITION);
+	for (draco::FaceIndex i(0); i < mesh->num_faces(); ++i)
+	{
+		for (size_t j = 0; j < 3; j++)
+		{
+			const draco::PointIndex vert_index = mesh->face(i)[j];
+			indices.push_back(positions->mapped_index(vert_index).value());
+		}
+	}
+	
+	auto normals = mesh->GetNamedAttribute(draco::GeometryAttribute::NORMAL);
+	auto uvs = mesh->GetNamedAttribute(draco::GeometryAttribute::TEX_COORD);
+	for (draco::AttributeValueIndex i(0); i < normals->size(); i++)
+	{
+		ModelClass::VertexInputType meshVert;
+		meshVert.Color = XMFLOAT4(1, 1, 1, 1);
+		normals->ConvertValue<float, 3>(i, &meshVert.Normal.x);
+		positions->ConvertValue<float, 3>(i, &meshVert.Position.x);
+		uvs->ConvertValue<float, 2>(i, &meshVert.UV.x);
+		vertices.push_back(meshVert);
+	}
 	auto end_time = system_clock::now();
 	auto diff = end_time - start_time;
 	auto durration = cr::duration_cast<cr::milliseconds>(diff);
 	Log("loaded mainMesh in " + std::to_string(durration.count()) + " ms");
+	Log("normals " + std::to_string(normals->size()) + " ");
+	Log("positions " + std::to_string(positions->size()) + " ");
+	Log("uvs " + std::to_string(uvs->size()) + " ");
+	shared_ptr<ModelClass> subMesh = make_shared<ModelClass>();
+	subMesh->SetIndicies(&indices, m_d3dDevice.Get());
+	subMesh->SetVerticies(&vertices, m_d3dDevice.Get());
+	auto ent = registry.create();
+	registry.assign<Types::Transform>(ent);
+	registry.assign<Types::MeshRenderer>(ent, subMesh, materials->at(0));
+
+	objl::Loader Loader;
+	bool loadout = false;// Loader.LoadFile(ROOT_ASSET_PATH + "sponza.obj");
+
+
 
 	for (int i = 0; i < Loader.LoadedMeshes.size(); i++)
 	{
+		continue;
 		objl::MeshRenderer curMesh = Loader.LoadedMeshes[i];
 		if (curMesh.MeshName == "sponza_04") //skip the flag in the middle
 			continue;
@@ -233,8 +276,6 @@ void Game::Initialize(HWND window, int width, int height)
 		subMesh->SetVerticies(&vertices, m_d3dDevice.Get());
 		m_Models->push_back(subMesh);
 
-
-
 		shared_ptr<Material> mat = FindMaterial(curMesh.MeshMaterial.name);
 		if (mat == nullptr) {
 			shared_ptr<Texture2D> albedo = GetTextureOrDefault(
@@ -264,7 +305,7 @@ void Game::Initialize(HWND window, int width, int height)
 			materials->push_back(mat);
 		}
 
-		auto ent = registry.create(); //use raw pointer here
+		auto ent = registry.create();
 		registry.assign<Types::Transform>(ent);
 		registry.assign<Types::MeshRenderer>(ent, subMesh, mat);
 	}

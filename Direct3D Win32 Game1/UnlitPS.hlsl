@@ -15,7 +15,7 @@ float4 ColorPixelShader(PixelInputType i) : SV_TARGET
 
     PBRMaterial mat;
     float4 albedoAlpha = diffuseTexture.Sample(diffuseTextureSampler, i.uv);
-    clip(albedoAlpha.a - 0.5);
+   // clip(albedoAlpha.a - 0.5);
     mat.albedo = albedoAlpha.rgb;
     mat.metallness = metalnessTexture.Sample(diffuseTextureSampler, i.uv);
 
@@ -45,5 +45,5 @@ float4 ColorPixelShader(PixelInputType i) : SV_TARGET
    // outColor.rgb = normalMap * 0.5 + 0.5;
   
 
-    return outColor;
+    return float4(i.normalWS * 0.5 + 0.5,0);
 }
