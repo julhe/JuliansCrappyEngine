@@ -8,7 +8,7 @@ A simple DirectX11 Game-Engine
 * EnTT
 * ImGUI
 * AMD Compressionator (Toolchain only)
-* Tonemmapping.hlsl by Matt Patentio
+* Tonemmapping.hlsl by Matt Pettineo
 * DirectX Math
 * DirectX DDS Loader
 * Shadercode from the Unity Engine
