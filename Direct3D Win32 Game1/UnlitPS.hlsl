@@ -41,9 +41,9 @@ float4 ColorPixelShader(PixelInputType i) : SV_TARGET
     }
 
     outColor.rgb += float3(0.4, 0.4, 0.42) * mat.albedo; // ambient light
-    outColor.rgb = Tonemap(outColor.rgb);
+   // outColor.rgb = Tonemap(outColor.rgb);
    // outColor.rgb = normalMap * 0.5 + 0.5;
   
-
-    return float4(i.normalWS * 0.5 + 0.5,0);
+    return float4(mat.albedo, 1.0);
+    //return float4(i.normalWS * 0.5 + 0.5,0);
 }

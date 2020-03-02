@@ -84,7 +84,7 @@ bool Shader::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename
 		shaderVSsize,
 		&layout));
 
-
+	
 	PerDrawCallBuffer perCallBuferData;
 	memset(&perCallBuferData, 0, sizeof(PerDrawCallBuffer));
 	perCallBuferData.objectToClip = XMFLOAT4X4();
@@ -103,6 +103,9 @@ bool Shader::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename
 	cbDesc.StructureByteStride = 0;
 
 	perDrawCallBuffer = NULL;
+
+	delete[] shaderVS;
+	delete[] shaderPS;
 	 //Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.
 	DX::ThrowIfFailed(device->CreateBuffer(
 		&cbDesc, 

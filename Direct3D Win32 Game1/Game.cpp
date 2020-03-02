@@ -227,6 +227,11 @@ void Game::Initialize(HWND window, int width, int height)
 	shared_ptr<ModelClass> subMesh = make_shared<ModelClass>();
 	subMesh->SetIndicies(&indices, m_d3dDevice.Get());
 	subMesh->SetVerticies(&vertices, m_d3dDevice.Get());
+
+	Log(std::to_string(sizeof(ModelClass::VertexInputType) * vertices.size()) + " bytes for vertecies" );
+	std::ofstream vertecieDump("vertecieDump.bin", std::ios::out | std::ofstream::binary);
+	vertecieDump.write((char*)& vertices[0], vertices.size() * sizeof(ModelClass::VertexInputType));
+	Log(std::to_string(sizeof(unsigned long) * indices.size()) + " bytes for indicies" );
 	auto ent = registry.create();
 	registry.assign<Types::Transform>(ent);
 	registry.assign<Types::MeshRenderer>(ent, subMesh, materials->at(0));
